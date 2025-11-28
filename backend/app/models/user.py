@@ -16,3 +16,4 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(String, default=UserRole.USER)
     is_active = Column(Boolean, default=True)
+    avatar = Column(String, nullable=True)

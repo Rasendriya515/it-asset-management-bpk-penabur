@@ -5,6 +5,7 @@ from app.db.session import get_db
 from app.models.asset import Asset
 from app.models.location import School
 from app.schemas.asset import AssetResponse, AssetCreate, AssetUpdate
+from app.models.update_log import UpdateLog
 
 router = APIRouter()
 
@@ -88,6 +89,15 @@ def create_asset(
         db.add(new_asset)
         db.commit()
         db.refresh(new_asset)
+        log = UpdateLog(
+        asset_barcode=new_asset.barcode,
+        asset_name=f"{new_asset.brand} - {new_asset.model_series}",
+        action="CREATE",
+        details="Menambahkan aset baru ke database",
+        actor="Admin"
+        )
+        db.add(log)
+        db.commit()
         return new_asset
     except Exception as e:
         db.rollback()
@@ -113,6 +123,15 @@ def update_asset(
     db.add(asset)
     db.commit()
     db.refresh(asset)
+    log = UpdateLog(
+        asset_barcode=asset.barcode,
+        asset_name=f"{asset.brand} - {asset.model_series}",
+        action="UPDATE",
+        details="Memperbarui data aset",
+        actor="Admin"
+    )
+    db.add(log)
+    db.commit()
     return asset
 
 @router.delete("/{asset_id}", response_model=AssetResponse)
@@ -127,6 +146,14 @@ def delete_asset(
     if not asset:
         raise HTTPException(status_code=404, detail="Aset tidak ditemukan")
     
+    log = UpdateLog(
+        asset_barcode=asset.barcode,
+        asset_name=f"{asset.brand} - {asset.model_series}",
+        action="DELETE",
+        details="Menghapus aset dari database",
+        actor="Admin"
+    )
+    db.add(log)
     db.delete(asset)
     db.commit()
     return asset

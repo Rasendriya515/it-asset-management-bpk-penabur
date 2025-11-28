@@ -4,6 +4,19 @@ import { ArrowLeft, Save, ScanBarcode, Box, Cpu, Shield, Activity, Loader2 } fro
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 import { ASSET_TYPES, ASSET_CATEGORIES, ASSET_SUBCATEGORIES, CITIES, FLOORS, SCHOOL_CODE_MAPPING } from '../../constants/assetData';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
+
+const AREA_MAP = {
+  'BRT': 'Area Barat',
+  'PST': 'Area Pusat',
+  'UTR': 'Area Utara',
+  'TMR': 'Area Timur',
+  'SLT': 'Area Selatan',
+  'TNG': 'Area Tangerang',
+  'BKS': 'Area Bekasi',
+  'CBR': 'Area Cibubur',
+  'DPK': 'Area Depok'
+};
 
 const EditAsset = () => {
   const { schoolId, assetId } = useParams();
@@ -12,6 +25,7 @@ const EditAsset = () => {
   const [schoolCode, setSchoolCode] = useState('XXX');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const { setCrumbs } = useBreadcrumb();
 
   const [formData, setFormData] = useState({
     city_code: '',
@@ -50,6 +64,19 @@ const EditAsset = () => {
         setSchoolInfo(schoolRes.data);
         const code = SCHOOL_CODE_MAPPING[schoolRes.data.name] || 'A01';
         setSchoolCode(code);
+
+        let areaName = 'Area Lain';
+        if (schoolRes.data.city_code && AREA_MAP[schoolRes.data.city_code.toUpperCase()]) {
+          areaName = AREA_MAP[schoolRes.data.city_code.toUpperCase()];
+        } else if (schoolRes.data.area_id) {
+          try {
+            const areaRes = await api.get(`/areas/${schoolRes.data.area_id}`);
+            areaName = areaRes.data.name;
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        setCrumbs([areaName, schoolRes.data.name, 'Form Edit']);
 
         const assetRes = await api.get(`/assets/${assetId}`);
         const data = assetRes.data;

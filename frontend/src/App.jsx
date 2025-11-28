@@ -6,6 +6,11 @@ import AreaDetail from './pages/area/AreaDetail';
 import SchoolDetail from './pages/school/SchoolDetail';
 import AddAsset from './pages/forms/AddAsset';
 import EditAsset from './pages/forms/EditAsset';
+import ServiceHistory from './pages/service/ServiceHistory';
+import AddService from './pages/service/AddService';
+import UpdateHistory from './pages/service/UpdateHistory';
+import Profile from './pages/profile/Profile';
+import { BreadcrumbProvider } from './context/BreadcrumbContext';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -13,8 +18,9 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+const App = () => {
   return (
+  <BreadcrumbProvider>
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -63,11 +69,47 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        <Route 
+          path="/service-history" 
+          element={
+            <ProtectedRoute>
+              <ServiceHistory />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/service-history/add" 
+          element={
+            <ProtectedRoute>
+              <AddService />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/update-history" 
+          element={
+            <ProtectedRoute>
+              <UpdateHistory />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
+  </BreadcrumbProvider>
   );
-}
+};
 
 export default App;

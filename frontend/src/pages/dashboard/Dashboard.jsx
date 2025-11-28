@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import MainLayout from '../../components/layout/MainLayout';
 import { Monitor, Server, Wifi, Database, TrendingUp, AlertCircle, Calendar, Loader2 } from 'lucide-react';
 import api from '../../services/api';
+import { Link } from 'react-router-dom';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
 
 const StatCard = ({ title, count, icon, color }) => (
   <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -20,6 +22,11 @@ const StatCard = ({ title, count, icon, color }) => (
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { setCrumbs } = useBreadcrumb();
+
+  useEffect(() => {
+    setCrumbs(['Dashboard']); 
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -147,7 +154,12 @@ const Dashboard = () => {
             </div>
             
             <div className="mt-4 pt-2 border-t border-gray-100 text-center">
-                <button className="text-xs text-penabur-blue font-medium hover:underline">Lihat Semua History</button>
+                <Link 
+                  to="/update-history" 
+                  className="text-xs text-penabur-blue font-medium hover:underline cursor-pointer block w-full"
+                >
+                  Lihat Semua History
+                </Link>
             </div>
           </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Map, History, FileClock, LogOut, ChevronDown, ChevronRight, School } from 'lucide-react';
 import api from '../../services/api';
+import logoBpk from '../../assets/images/logo-bpk.png';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -30,18 +31,20 @@ const Sidebar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="hidden lg:flex flex-col w-64 bg-penabur-dark h-screen fixed left-0 top-0 text-white shadow-2xl z-20">
-      
-      <div className="h-16 flex items-center px-6 bg-penabur-blue border-b border-blue-800 shadow-md">
-        <School className="w-6 h-6 text-penabur-gold mr-3" />
+    <div className="hidden md:flex flex-col w-64 bg-penabur-dark h-screen fixed left-0 top-0 text-white shadow-2xl z-20">
+      <div className="h-24 flex items-center px-6 border-b border-gray-700">
+        <img 
+          src={logoBpk} 
+          alt="Logo" 
+          className="h-10 w-auto mr-3 object-contain hover:scale-105 transition-transform"
+        />
         <div>
-          <h1 className="font-bold text-lg tracking-wide">IT ASSET</h1>
-          <p className="text-[10px] text-blue-200 tracking-wider">BPK PENABUR</p>
+          <h1 className="font-bold text-sm leading-tight text-white">IT Asset Management</h1>
+          <p className="text-xs text-gray-400 font-medium">BPK Penabur</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto py-6 space-y-2 px-3">
-        
         <Link 
           to="/dashboard" 
           className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${

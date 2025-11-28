@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { School, MapPin, ArrowRight, Building2 } from 'lucide-react';
+import { MapPin, ArrowRight, Building2 } from 'lucide-react'; // Hapus 'School' jika tidak dipakai
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
 
 const AreaDetail = () => {
   const { id } = useParams();
   const [schools, setSchools] = useState([]);
   const [areaInfo, setAreaInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Panggil Hook Breadcrumb
+  const { setCrumbs } = useBreadcrumb();
 
+  // --- USE EFFECT GABUNGAN (LEBIH EFISIEN) ---
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       setLoading(true);
       try {
+        // 1. Ambil Info Area
         const areaRes = await api.get(`/areas/${id}`);
         setAreaInfo(areaRes.data);
+        
+        // LAPOR KE BREADCRUMB (PENTING!)
+        setCrumbs([areaRes.data.name]); 
 
+        // 2. Ambil Daftar Sekolah
         const schoolRes = await api.get(`/areas/${id}/schools`);
         setSchools(schoolRes.data);
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -26,19 +37,20 @@ const AreaDetail = () => {
       }
     };
 
-    fetchData();
+    fetchAllData();
   }, [id]);
 
   return (
     <MainLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <MapPin className="text-penabur-blue mr-3" />
               Area {areaInfo ? areaInfo.name : 'Loading...'}
             </h2>
-            <p className="text-gray-500 mt-1 text-sm">
+            <p className="text-gray-500 text-lg mt-1">
               Daftar Sekolah & Unit Kerja di wilayah ini
             </p>
           </div>
@@ -47,6 +59,7 @@ const AreaDetail = () => {
           </div>
         </div>
 
+        {/* Content */}
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-penabur-blue"></div>

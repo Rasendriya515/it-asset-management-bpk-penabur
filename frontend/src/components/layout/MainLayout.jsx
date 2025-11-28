@@ -7,7 +7,7 @@ const MainLayout = ({ children }) => {
     <div className="min-h-screen bg-penabur-light">
       <Sidebar />
 
-      <div className="lg:ml-64 min-h-screen flex flex-col">
+      <div className="md:ml-64 min-h-screen flex flex-col">
         
         <TopBar />
 

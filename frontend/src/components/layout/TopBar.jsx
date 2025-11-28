@@ -1,10 +1,27 @@
-import React from 'react';
-import { LogOut, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { LogOut, User, ChevronRight, Home } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import api from '../../services/api';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
+
+const BASE_URL = 'http://localhost:8000';
 
 const TopBar = () => {
+  const { crumbs } = useBreadcrumb();
+  const [user, setUser] = useState({ full_name: 'Admin', avatar: null });
   const navigate = useNavigate();
-  const role = localStorage.getItem('role') || 'Guest';
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get('/users/me');
+        setUser(res.data);
+      } catch (err) {
+        console.error("Gagal load profile", err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -12,33 +29,48 @@ const TopBar = () => {
   };
 
   return (
-    <div className="bg-white h-16 fixed top-0 right-0 left-0 lg:left-64 z-10 border-b border-gray-200 shadow-sm transition-all duration-300">
-      
+    <div className="bg-white h-16 fixed top-0 right-0 left-0 md:left-64 z-10 border-b border-gray-200 shadow-sm transition-all duration-300">
       <div className="flex items-center justify-between h-full px-6">
-        
-        <div className="font-bold text-penabur-blue text-lg truncate">
-          IT Asset Management - BPK Penabur
-        </div>
-        <div className="flex items-center space-x-4">
-          
-          <div className="flex items-center space-x-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
-            <div className="bg-penabur-blue text-white p-1 rounded-full">
-              <User size={14} />
-            </div>
-            <span className="text-sm font-medium text-gray-600 hidden sm:inline">
-              Signed in as <span className="text-penabur-blue font-bold uppercase">{role}</span>
+        <div className="flex items-center text-sm font-medium text-gray-500 overflow-hidden whitespace-nowrap mr-4">
+            <span className="flex items-center hover:text-penabur-blue transition-colors cursor-default">
+                <Home size={14} className="mr-2 mb-0.5" />
+                IT Asset Management
             </span>
-          </div>
-
-          <button 
-            onClick={handleLogout}
-            className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
-            title="Logout"
-          >
-            <LogOut size={20} />
-          </button>
+            {crumbs && crumbs.map((crumb, index) => (
+                <React.Fragment key={index}>
+                    <ChevronRight size={14} className="mx-2 text-gray-400" />
+                    <span className={`${index === crumbs.length - 1 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
+                        {crumb}
+                    </span>
+                </React.Fragment>
+            ))}
+        </div>
+        <div className="flex items-center space-x-4 flex-shrink-0">
+            <Link to="/profile" className="flex items-center space-x-3 hover:bg-gray-50 py-1 px-2 rounded-lg transition-colors cursor-pointer">
+                <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold text-gray-700">{user.full_name || 'Admin'}</p>
+                    <p className="text-xs text-green-600 font-medium">Online</p>
+                </div>
+            
+                <div className="bg-gray-200 p-1 rounded-full overflow-hidden w-9 h-9 flex items-center justify-center border border-gray-300">
+                    {user.avatar ? (
+                        <img src={`${BASE_URL}${user.avatar}`} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                        <User className="text-gray-500" size={20} />
+                    )}
+                </div>
+            </Link>
+            <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
+            <button 
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
+                title="Logout"
+            >
+                <LogOut size={20} />
+            </button>
 
         </div>
+
       </div>
     </div>
   );

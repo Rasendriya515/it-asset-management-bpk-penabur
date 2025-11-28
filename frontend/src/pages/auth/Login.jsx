@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
-import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import { Lock, User, Loader2 } from 'lucide-react';
+import schoolBg from '../../assets/images/school-bg.jpg';
+import logoBpk from '../../assets/images/logo-bpk.png';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -18,103 +18,99 @@ const Login = () => {
     setError('');
 
     try {
-      const formData = new URLSearchParams();
-      formData.append('username', email); 
-      formData.append('password', password);
+      const params = new URLSearchParams();
+      params.append('username', username);
+      params.append('password', password);
 
-      const response = await api.post('/auth/login', formData);
-      
-      const { access_token, role } = response.data;
-      
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('role', role);
+      const response = await api.post('/auth/login', params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
 
-      alert(`Login Berhasil! Selamat datang, ${role}`);
+      localStorage.setItem('token', response.data.access_token);
+      localStorage.setItem('role', 'admin'); 
+
       navigate('/dashboard');
-      
+
     } catch (err) {
-      console.error(err);
-      setError('Email atau Password salah. Silakan coba lagi.');
+      console.error("Login Error:", err);
+      setError('Username atau Password salah!');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-penabur-light px-4">
-      
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border-t-4 border-penabur-blue">
-        
-        <div className="bg-penabur-blue p-8 text-center">
-          <div className="mx-auto bg-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <ShieldCheck className="text-penabur-blue w-8 h-8" />
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-blue-600">
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={schoolBg}
+          alt="Background Sekolah" 
+          className="w-full h-full object-cover opacity-50 filter grayscale-[50%]"
+        />
+        <div className="absolute inset-0 bg-blue-900/10 mix-blend-multiply"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md p-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 mx-4">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+             <img 
+               src={logoBpk}
+               alt="Logo BPK PENABUR" 
+               className="h-24 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform"
+             />
           </div>
-          <h2 className="text-2xl font-bold text-white">IT Asset Management</h2>
-          <p className="text-penabur-gold text-sm mt-1 font-medium">BPK PENABUR</p>
+          <h1 className="text-2xl font-bold text-gray-800 tracking-wide">IT ASSET MANAGEMENT</h1>
+          <p className="text-sm text-gray-500 font-medium tracking-widest mt-1">BPK PENABUR JAKARTA</p>
         </div>
 
-        <div className="p-8">
-          <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">Sign In</h3>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-600 text-sm rounded-lg flex items-center border border-red-200 animate-pulse">
+            <span className="mr-2">⚠️</span> {error}
+          </div>
+        )}
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center">
-              ⚠️ {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-4">
+            <div className="relative group">
+              <User className="absolute left-3 top-3 text-gray-400 group-focus-within:text-penabur-blue transition-colors" size={20} />
               <input 
-                type="email" 
+                type="text"
+                placeholder="Username"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-penabur-blue focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-penabur-blue focus:border-transparent outline-none transition"
-                placeholder="admin@bpkpenabur.id"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-penabur-blue focus:border-transparent outline-none transition"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button 
-                  type="button"
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
+            
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3 text-gray-400 group-focus-within:text-penabur-blue transition-colors" size={20} />
+              <input 
+                type="password"
+                placeholder="Password"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-penabur-blue focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-penabur-blue text-white py-2.5 rounded-lg font-semibold hover:bg-penabur-dark transition duration-300 shadow-md flex items-center justify-center"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin mr-2" size={20} />
-                  Signing In...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center text-xs text-gray-400">
-            &copy; 2025 IT Division BPK PENABUR
           </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-penabur-blue hover:bg-penabur-dark text-white font-bold py-3 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-blue-500/30 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="animate-spin" /> : 'SIGN IN'}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-400">
+            &copy; 2025 IT Division - BPK PENABUR Jakarta
+          </p>
         </div>
       </div>
     </div>

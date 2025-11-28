@@ -4,24 +4,67 @@ import { Search, Plus, ArrowLeft, Download, Database, Pencil, Trash2 } from 'luc
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 import { ASSET_TYPES, ASSET_CATEGORIES, ASSET_SUBCATEGORIES, TABLE_COLUMNS } from '../../constants/assetData';
+import * as XLSX from 'xlsx';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
+
+const AREA_MAP = {
+  'BRT': 'Area Barat',
+  'PST': 'Area Pusat',
+  'UTR': 'Area Utara',
+  'TMR': 'Area Timur',
+  'SLT': 'Area Selatan',
+  'TNG': 'Area Tangerang',
+  'BKS': 'Area Bekasi',
+  'CBR': 'Area Cibubur',
+  'DPK': 'Area Depok'
+};
 
 const SchoolDetail = () => {
   const { id } = useParams();
   const [assets, setAssets] = useState([]);
   const [schoolInfo, setSchoolInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  
   const [selectedType, setSelectedType] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSub, setSelectedSub] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const { setCrumbs } = useBreadcrumb();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSchoolInfo = async () => {
+      try {
+        const res = await api.get(`/schools/${id}`);
+        const data = res.data;
+        setSchoolInfo(data);
+        
+        let areaName = 'Area Lain';
+        
+        if (data.city_code && AREA_MAP[data.city_code.toUpperCase()]) {
+          areaName = AREA_MAP[data.city_code.toUpperCase()];
+        } else if (data.area_id) {
+          try {
+            const areaRes = await api.get(`/areas/${data.area_id}`);
+            areaName = areaRes.data.name;
+          } catch (e) {
+            console.error("Gagal ambil nama area", e);
+          }
+        }
+
+        setCrumbs([areaName, data.name]);
+
+      } catch (err) {
+        console.error("Gagal load info sekolah:", err);
+      }
+    };
+    fetchSchoolInfo();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchAssetData = async () => {
       setLoading(true);
       try {
-        const schoolRes = await api.get(`/schools/${id}`);
-        setSchoolInfo(schoolRes.data);
-
         const params = {
           school_id: id,
           type_code: selectedType || undefined,
@@ -30,13 +73,13 @@ const SchoolDetail = () => {
         const assetRes = await api.get('/assets', { params });
         setAssets(assetRes.data);
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error fetching assets:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchAssetData();
   }, [id, selectedType, selectedCategory]);
 
   const getVisibleColumns = () => {
@@ -69,6 +112,44 @@ const SchoolDetail = () => {
       }
     }
     return value;
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredAssets.map((asset, index) => {
+      return {
+        'No': index + 1,
+        'Barcode IT': asset.barcode,
+        'Serial Number': asset.serial_number,
+        'Nama Aset': `${asset.brand} - ${asset.model_series}`,
+        'Tipe': getAssetLabel('type_code', asset.type_code, asset),
+        'Kategori': getAssetLabel('category_code', asset.category_code, asset),
+        'Lokasi': `Lt. ${asset.floor} - ${asset.room}`,
+        'Status': asset.status,
+        'Pengguna': asset.assigned_to || '-',
+        'Tahun Pengadaan': `20${asset.procurement_year}`
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const columnWidths = [
+      { wch: 5 },  
+      { wch: 25 }, 
+      { wch: 20 }, 
+      { wch: 30 },
+      { wch: 15 }, 
+      { wch: 15 }, 
+      { wch: 20 }, 
+      { wch: 15 }, 
+      { wch: 20 }, 
+      { wch: 15 }, 
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Aset");
+
+    const fileName = `Data_Aset_${schoolInfo ? schoolInfo.name : 'Sekolah'}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   const handleDelete = async (assetId, assetBarcode) => {
@@ -173,7 +254,10 @@ const SchoolDetail = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <span className="text-gray-500 text-sm font-medium">Menampilkan {filteredAssets.length} data aset</span>
-            <button className="text-green-600 hover:text-green-700 hover:bg-green-50 px-3 py-1 rounded-md text-sm flex items-center transition-colors font-medium border border-transparent hover:border-green-200">
+            <button 
+              onClick={handleExport}
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 px-3 py-1 rounded-md text-sm flex items-center transition-colors font-medium border border-transparent hover:border-green-200"
+            >
               <Download size={16} className="mr-2"/> Export Excel
             </button>
           </div>

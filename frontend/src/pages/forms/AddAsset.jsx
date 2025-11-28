@@ -4,6 +4,19 @@ import { ArrowLeft, Save, ScanBarcode, Box, Cpu, Shield, Activity, Loader2 } fro
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 import { ASSET_TYPES, ASSET_CATEGORIES, ASSET_SUBCATEGORIES, CITIES, FLOORS, SCHOOL_CODE_MAPPING } from '../../constants/assetData';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
+
+const AREA_MAP = {
+  'BRT': 'Area Barat',
+  'PST': 'Area Pusat',
+  'UTR': 'Area Utara',
+  'TMR': 'Area Timur',
+  'SLT': 'Area Selatan',
+  'TNG': 'Area Tangerang',
+  'BKS': 'Area Bekasi',
+  'CBR': 'Area Cibubur',
+  'DPK': 'Area Depok'
+};
 
 const AddAsset = () => {
   const { id } = useParams();
@@ -11,6 +24,7 @@ const AddAsset = () => {
   const [schoolInfo, setSchoolInfo] = useState(null);
   const [schoolCode, setSchoolCode] = useState('XXX');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setCrumbs } = useBreadcrumb();
 
   const [formData, setFormData] = useState({
     city_code: '01',
@@ -46,9 +60,26 @@ const AddAsset = () => {
     const fetchSchool = async () => {
       try {
         const res = await api.get(`/schools/${id}`);
-        setSchoolInfo(res.data);
-        const code = SCHOOL_CODE_MAPPING[res.data.name] || 'A01';
+        const data = res.data;
+        setSchoolInfo(data);
+        
+        const code = SCHOOL_CODE_MAPPING[data.name] || 'A01';
         setSchoolCode(code);
+
+        let areaName = 'Area Lain';
+        if (data.city_code && AREA_MAP[data.city_code.toUpperCase()]) {
+          areaName = AREA_MAP[data.city_code.toUpperCase()];
+        } else if (data.area_id) {
+          try {
+            const areaRes = await api.get(`/areas/${data.area_id}`);
+            areaName = areaRes.data.name;
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        setCrumbs([areaName, data.name, 'Form Input']);
+
       } catch (error) {
         console.error("Gagal ambil info sekolah", error);
       }
@@ -173,14 +204,12 @@ const AddAsset = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kota</label>
                 <select name="city_code" value={formData.city_code} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue">
                   {CITIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
                 </select>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipe Aset <span className="text-red-500">*</span></label>
                 <select name="type_code" value={formData.type_code} required onChange={(e) => setFormData(prev => ({ ...prev, type_code: e.target.value, category_code: '', subcategory_code: '' }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue">
@@ -188,7 +217,6 @@ const AddAsset = () => {
                   {ASSET_TYPES.map(t => <option key={t.code} value={t.code}>{t.label}</option>)}
                 </select>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kategori <span className="text-red-500">*</span></label>
                 <select name="category_code" value={formData.category_code} required disabled={!formData.type_code} onChange={(e) => setFormData(prev => ({ ...prev, category_code: e.target.value, subcategory_code: '' }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue disabled:bg-gray-50">
@@ -196,7 +224,6 @@ const AddAsset = () => {
                   {formData.type_code && ASSET_CATEGORIES[formData.type_code]?.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
                 </select>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jenis (Opsional)</label>
                 <select name="subcategory_code" value={formData.subcategory_code} disabled={!formData.category_code} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue disabled:bg-gray-50">
@@ -204,7 +231,6 @@ const AddAsset = () => {
                   {formData.category_code && ASSET_SUBCATEGORIES[formData.category_code]?.map(s => <option key={s.code} value={s.code}>{s.label}</option>)}
                 </select>
               </div>
-              
               <div className="grid grid-cols-2 gap-2">
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
@@ -215,7 +241,6 @@ const AddAsset = () => {
                    <select name="procurement_year" value={formData.procurement_year} onChange={handleChange} className="w-full px-2 py-2 border border-gray-300 rounded-lg outline-none">{Array.from({length: 25}, (_, i) => String(i + 16).padStart(2, '0')).map(y => <option key={y} value={y}>20{y}</option>)}</select>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Lantai</label>
@@ -330,6 +355,7 @@ const AddAsset = () => {
                 </div>
              </div>
           </div>
+
           <div className="flex justify-end pt-6">
              <button 
                type="submit"
