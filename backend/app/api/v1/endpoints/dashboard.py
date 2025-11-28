@@ -1,0 +1,46 @@
+from typing import Any
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from app.db.session import get_db
+from app.models.asset import Asset, AssetStatus
+from app.schemas.asset import AssetResponse
+
+router = APIRouter()
+
+@router.get("/stats")
+def get_dashboard_stats(db: Session = Depends(get_db)):
+    """
+    Mengambil ringkasan data untuk Dashboard:
+    1. Total Aset
+    2. Total Hardware
+    3. Aset Perlu Perhatian (Rusak/Perbaikan/Terkendala)
+    4. Grafik Pengadaan tahun ini (Group by Month)
+    5. 5 Aset Terbaru
+    """
+    total_assets = db.query(Asset).count()
+    
+    total_hardware = db.query(Asset).filter(Asset.type_code == "HW").count()
+    
+    need_attention = db.query(Asset).filter(
+        Asset.status.in_([AssetStatus.RUSAK, AssetStatus.PERBAIKAN, AssetStatus.TERKENDALA])
+    ).count()
+
+    chart_data_query = db.query(
+        Asset.procurement_month, func.count(Asset.id)
+    ).group_by(Asset.procurement_month).all()
+    
+    chart_data = {k: 0 for k in ["01","02","03","04","05","06","07","08","09","10","11","12"]}
+    for month, count in chart_data_query:
+        if month in chart_data:
+            chart_data[month] = count
+
+    recent_assets = db.query(Asset).order_by(Asset.created_at.desc()).limit(5).all()
+
+    return {
+        "total_assets": total_assets,
+        "total_hardware": total_hardware,
+        "need_attention": need_attention,
+        "chart_data": chart_data,
+        "recent_assets": recent_assets
+    }
