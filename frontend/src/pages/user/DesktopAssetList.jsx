@@ -9,17 +9,26 @@ const DesktopAssetList = () => {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Ambil role user dari localStorage untuk pengecekan hak akses
+  const role = localStorage.getItem('role');
 
   useEffect(() => {
     const fetchAssets = async () => {
       setLoading(true);
       try {
         const res = await api.get('/assets', { 
-            params: { search: search || undefined } 
+            params: { 
+              search: search || undefined,
+              size: 100 
+            } 
         });
-        setAssets(res.data);
+        setAssets(res.data.items || []);
+        setTotalItems(res.data.total || 0);
       } catch (error) {
         console.error(error);
+        setAssets([]);
       } finally {
         setLoading(false);
       }
@@ -63,7 +72,7 @@ const DesktopAssetList = () => {
                 />
             </div>
             <div className="text-gray-500 font-medium text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-                Total Aset: <span className="text-penabur-blue font-bold">{assets.length}</span>
+                Total Aset: <span className="text-penabur-blue font-bold">{totalItems}</span>
             </div>
         </div>
 
@@ -130,13 +139,17 @@ const DesktopAssetList = () => {
                                             >
                                                 <Eye size={18} />
                                             </button>
-                                            <button 
-                                                onClick={() => navigate(`/school/${asset.school_id}/asset/${asset.id}/edit`)}
-                                                className="bg-yellow-50 text-yellow-600 p-2 rounded-lg hover:bg-yellow-500 hover:text-white transition-colors"
-                                                title="Edit Aset"
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
+                                            
+                                            {/* Tombol Edit HANYA muncul untuk role Operator (atau Admin) */}
+                                            {role === 'operator' && (
+                                                <button 
+                                                    onClick={() => navigate(`/school/${asset.school_id}/asset/${asset.id}/edit`)}
+                                                    className="bg-yellow-50 text-yellow-600 p-2 rounded-lg hover:bg-yellow-500 hover:text-white transition-colors"
+                                                    title="Edit Aset"
+                                                >
+                                                    <Pencil size={18} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
