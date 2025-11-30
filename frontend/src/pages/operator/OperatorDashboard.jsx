@@ -8,7 +8,7 @@ const OperatorDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ total_assets: 0, your_school: 'Loading...' });
   const [search, setSearch] = useState('');
-  
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -35,7 +35,7 @@ const OperatorDashboard = () => {
           <div className="relative z-10">
             <h1 className="text-3xl font-bold mb-2">Halo, Operator!</h1>
             <p className="text-blue-100 max-w-xl">
-              Selamat datang di panel manajemen aset. Silakan cari aset untuk melihat detail, melakukan pengecekan, atau memperbarui status kondisi.
+              Selamat datang! Silakan cari aset untuk melihat detail, melakukan pengecekan, atau memperbarui status kondisi.
             </p>
           </div>
           <div className="absolute right-0 top-0 h-full w-1/3 bg-white/10 skew-x-12 transform translate-x-10"></div>

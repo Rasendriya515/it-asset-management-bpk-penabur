@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 import re
 
@@ -84,3 +84,9 @@ class AssetResponse(AssetBase):
 
     class Config:
         from_attributes = True
+
+class AssetPaginatedResponse(BaseModel):
+    items: List[AssetResponse]
+    total: int
+    page: int
+    size: int

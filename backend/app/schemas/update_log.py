@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class LogResponse(BaseModel):
@@ -13,5 +13,11 @@ class LogResponse(BaseModel):
     actor: str
     created_at: datetime
 
-    class Config:
+class Config:
         from_attributes = True
+
+class LogPaginatedResponse(BaseModel):
+    items: List[LogResponse]
+    total: int
+    page: int
+    size: int

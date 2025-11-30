@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import date, datetime
 
 class ServiceBase(BaseModel):
@@ -22,5 +22,11 @@ class ServiceResponse(ServiceBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
+class Config:
         from_attributes = True
+
+class ServicePaginatedResponse(BaseModel):
+    items: List[ServiceResponse]
+    total: int
+    page: int
+    size: int
