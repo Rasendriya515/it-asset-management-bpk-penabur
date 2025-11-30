@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MainLayout from '../../components/layout/MainLayout';
 import { Plus, Trash2, Save, Database, Filter } from 'lucide-react';
 import api from '../../services/api';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
 
 const MASTER_CATEGORIES = [
   { value: 'CITY', label: 'Kota / Area' },
@@ -20,6 +21,12 @@ const MasterData = () => {
   const [options, setOptions] = useState([]);
   const [parentOptions, setParentOptions] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  const { setCrumbs } = useBreadcrumb();
+
+  useEffect(() => {
+    setCrumbs(['Master Data']);
+  }, []);
   
   const [formData, setFormData] = useState({
     code: '',

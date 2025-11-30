@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search, Plus, ArrowLeft, Download, Database, Pencil, Trash2, FileText, QrCode, X } from 'lucide-react';
+import { Search, Plus, ArrowLeft, Download, Database, Pencil, Trash2, FileText, QrCode, X, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 import { ASSET_TYPES, ASSET_CATEGORIES, ASSET_SUBCATEGORIES, TABLE_COLUMNS } from '../../constants/assetData';
@@ -35,6 +35,13 @@ const SchoolDetail = () => {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [selectedAssetQR, setSelectedAssetQR] = useState(null);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
+
   const { setCrumbs } = useBreadcrumb();
 
   useEffect(() => {
@@ -52,39 +59,62 @@ const SchoolDetail = () => {
             const areaRes = await api.get(`/areas/${data.area_id}`);
             foundAreaName = areaRes.data.name;
           } catch (e) {
-            console.error("Gagal ambil nama area dari API", e);
+            console.error(e);
           }
         }
         setAreaName(foundAreaName); 
         setCrumbs([foundAreaName, data.name]);
 
       } catch (err) {
-        console.error("Gagal load info sekolah:", err);
+        console.error(err);
       }
     };
     fetchSchoolInfo();
   }, [id]);
 
-  useEffect(() => {
-    const fetchAssetData = async () => {
-      setLoading(true);
-      try {
-        const params = {
-          school_id: id,
-          type_code: selectedType || undefined,
-          category_code: selectedCategory || undefined
-        };
-        const assetRes = await api.get('/assets', { params });
-        setAssets(assetRes.data);
-      } catch (error) {
-        console.error("Error fetching assets:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchAssetData = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        school_id: id,
+        page: page,
+        size: pageSize,
+        type_code: selectedType || undefined,
+        category_code: selectedCategory || undefined,
+        search: searchQuery || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder
+      };
+      const assetRes = await api.get('/assets', { params });
+      setAssets(assetRes.data.items);
+      setTotalItems(assetRes.data.total);
+      setTotalPages(Math.ceil(assetRes.data.total / pageSize));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchAssetData();
-  }, [id, selectedType, selectedCategory]);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchAssetData();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [id, selectedType, selectedCategory, searchQuery, page, pageSize, sortBy, sortOrder]);
+
+  const handleSort = (key) => {
+    const sortableColumns = ['barcode', 'brand', 'model_series', 'serial_number', 'status'];
+    if (sortableColumns.includes(key)) {
+        if (sortBy === key) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(key);
+            setSortOrder('asc');
+        }
+        setPage(1);
+    }
+  };
 
   const getVisibleColumns = () => {
     return TABLE_COLUMNS.filter(col => {
@@ -119,9 +149,9 @@ const SchoolDetail = () => {
   };
 
   const handleExport = () => {
-    const dataToExport = filteredAssets.map((asset, index) => {
+    const dataToExport = assets.map((asset, index) => {
       return {
-        'No': index + 1,
+        'No': (page - 1) * pageSize + index + 1,
         'Barcode IT': asset.barcode,
         'Serial Number': asset.serial_number,
         'Nama Aset': `${asset.brand} - ${asset.model_series}`,
@@ -158,9 +188,9 @@ const SchoolDetail = () => {
     const tableColumn = ["No", "Barcode IT", "SN", "Nama Aset", "Tipe", "Kategori", "Lokasi", "Status"];
     const tableRows = [];
 
-    filteredAssets.forEach((asset, index) => {
+    assets.forEach((asset, index) => {
       const assetData = [
-        index + 1,
+        (page - 1) * pageSize + index + 1,
         asset.barcode,
         asset.serial_number,
         `${asset.brand} - ${asset.model_series}`,
@@ -189,13 +219,7 @@ const SchoolDetail = () => {
       try {
         setLoading(true);
         await api.delete(`/assets/${assetId}`);
-        const params = {
-          school_id: id,
-          type_code: selectedType || undefined,
-          category_code: selectedCategory || undefined
-        };
-        const assetRes = await api.get('/assets', { params });
-        setAssets(assetRes.data);
+        fetchAssetData();
         alert("Aset berhasil dihapus!");
       } catch (error) {
         console.error("Gagal hapus:", error);
@@ -205,6 +229,7 @@ const SchoolDetail = () => {
       }
     }
   };
+
   const handleViewQR = (asset) => {
     setSelectedAssetQR(asset);
     setQrModalOpen(true);
@@ -231,6 +256,7 @@ const SchoolDetail = () => {
 
     img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
+
   const getQRContent = (asset) => {
     if(!asset || !schoolInfo) return "";
     
@@ -253,12 +279,6 @@ Link: ${assetUrl}
   };
 
   const visibleColumns = getVisibleColumns();
-
-  const filteredAssets = assets.filter(asset => 
-    asset.barcode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    asset.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    asset.serial_number?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <MainLayout>
@@ -292,13 +312,13 @@ Link: ${assetUrl}
               placeholder="Cari Barcode / SN..." 
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-penabur-blue outline-none"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             />
           </div>
           <select 
             className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-penabur-blue cursor-pointer"
             value={selectedType}
-            onChange={(e) => { setSelectedType(e.target.value); setSelectedCategory(''); setSelectedSub(''); }}
+            onChange={(e) => { setSelectedType(e.target.value); setSelectedCategory(''); setSelectedSub(''); setPage(1); }}
           >
             <option value="">Semua Tipe Aset</option>
             {ASSET_TYPES.map(t => <option key={t.code} value={t.code}>{t.label}</option>)}
@@ -307,7 +327,7 @@ Link: ${assetUrl}
             className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-penabur-blue disabled:bg-gray-100 cursor-pointer"
             disabled={!selectedType}
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
           >
             <option value="">Semua Kategori</option>
             {selectedType && ASSET_CATEGORIES[selectedType]?.map(c => (
@@ -318,7 +338,7 @@ Link: ${assetUrl}
             className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-penabur-blue disabled:bg-gray-100 cursor-pointer"
             disabled={!selectedCategory || !ASSET_SUBCATEGORIES[selectedCategory]}
             value={selectedSub}
-            onChange={(e) => setSelectedSub(e.target.value)}
+            onChange={(e) => { setSelectedSub(e.target.value); setPage(1); }}
           >
             <option value="">Semua Jenis</option>
             {selectedCategory && ASSET_SUBCATEGORIES[selectedCategory]?.map(s => (
@@ -330,7 +350,19 @@ Link: ${assetUrl}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
           
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-            <span className="text-gray-500 text-sm font-medium">Menampilkan {filteredAssets.length} data aset</span>
+            <div className="flex items-center gap-4">
+                <span className="text-gray-500 text-sm font-medium">Menampilkan data aset</span>
+                <select 
+                    className="border border-gray-300 rounded-lg px-2 py-1 outline-none focus:border-penabur-blue bg-white text-xs"
+                    value={pageSize} 
+                    onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                >
+                    <option value="10">10 / Hal</option>
+                    <option value="25">25 / Hal</option>
+                    <option value="50">50 / Hal</option>
+                    <option value="100">100 / Hal</option>
+                </select>
+            </div>
             
             <div className="flex space-x-2">
                 <button onClick={handleExportPDF} className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-md text-sm flex items-center transition-colors font-medium border border-transparent hover:border-red-200">
@@ -348,8 +380,17 @@ Link: ${assetUrl}
                 <tr>
                   <th className="p-4 border-b border-gray-200 w-10 text-center">No</th>
                   {visibleColumns.map((col) => (
-                    <th key={col.key} className={`p-4 border-b border-gray-200 ${col.minWidth} ${col.key === 'status' ? 'text-center' : ''}`}>
-                      {col.label}
+                    <th 
+                        key={col.key} 
+                        className={`p-4 border-b border-gray-200 ${col.minWidth} ${col.key === 'status' ? 'text-center' : ''} ${['barcode', 'brand', 'model_series', 'serial_number', 'status'].includes(col.key) ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                        onClick={() => handleSort(col.key)}
+                    >
+                      <div className={`flex items-center ${col.key === 'status' ? 'justify-center' : 'justify-start'} gap-1`}>
+                        {col.label}
+                        {['barcode', 'brand', 'model_series', 'serial_number', 'status'].includes(col.key) && (
+                            <ArrowUpDown size={12} className={`text-gray-400 ${sortBy === col.key ? 'text-penabur-blue' : ''}`} />
+                        )}
+                      </div>
                     </th>
                   ))}
                   <th className="p-4 border-b border-gray-200 text-center sticky right-0 bg-gray-50 shadow-l z-10 min-w-[200px]">Action</th>
@@ -358,12 +399,12 @@ Link: ${assetUrl}
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr><td colSpan="100" className="p-8 text-center text-gray-500">Loading data aset...</td></tr>
-                ) : filteredAssets.length === 0 ? (
+                ) : assets.length === 0 ? (
                   <tr><td colSpan="100" className="p-8 text-center text-gray-500">Tidak ada data aset ditemukan.</td></tr>
                 ) : (
-                  filteredAssets.map((asset, index) => (
+                  assets.map((asset, index) => (
                     <tr key={asset.id} className="hover:bg-blue-50 transition-colors group">
-                      <td className="p-4 text-center text-gray-400 font-medium">{index + 1}</td>
+                      <td className="p-4 text-center text-gray-400 font-medium">{(page - 1) * pageSize + index + 1}</td>
                       
                       {visibleColumns.map((col) => (
                         <td key={col.key} className={`p-4 text-gray-700 ${col.key === 'status' ? 'text-center' : ''}`}>
@@ -372,7 +413,7 @@ Link: ${assetUrl}
                               asset.status.toLowerCase().includes('berfungsi') ? 'bg-green-100 text-green-700 border-green-200' :
                               asset.status.toLowerCase().includes('rusak') ? 'bg-red-100 text-red-700 border-red-200' :
                               asset.status.toLowerCase().includes('perbaikan') ? 'bg-orange-100 text-orange-700 border-orange-200' :
-                              'bg-yellow-100 text-yellow-700 border-yellow-200' // Default Terkendala / Dihapuskan / Custom
+                              'bg-yellow-100 text-yellow-700 border-yellow-200'
                             }`}>
                               {asset.status}
                             </span>
@@ -422,6 +463,29 @@ Link: ${assetUrl}
               </tbody>
             </table>
           </div>
+
+          <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
+            <div className="text-xs text-gray-500 font-medium">
+                Halaman <span className="font-bold text-gray-700">{page}</span> dari <span className="font-bold text-gray-700">{totalPages}</span>
+            </div>
+            <div className="flex gap-2">
+                <button 
+                    disabled={page === 1}
+                    onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                    className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                    <ChevronLeft size={16} />
+                </button>
+                <button 
+                    disabled={page === totalPages || totalPages === 0}
+                    onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                    className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                    <ChevronRight size={16} />
+                </button>
+            </div>
+          </div>
+
         </div>
       </div>
       {qrModalOpen && selectedAssetQR && (

@@ -67,7 +67,7 @@ const ServiceHistory = () => {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-              <Wrench className="text-penabur-blue mr-2" /> Riwayat Service
+              <Wrench className="text-penabur-blue mr-2" /> Service History
             </h2>
             <p className="text-gray-500 text-lg mt-1">Logbook perbaikan aset IT.</p>
           </div>

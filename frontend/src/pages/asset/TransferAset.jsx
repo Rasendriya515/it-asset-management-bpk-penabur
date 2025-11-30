@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeftRight, Building2, MapPin, CheckCircle, AlertTriangle, Box, ArrowRight, Loader2 } from 'lucide-react';
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
+import { useBreadcrumb } from '../../context/BreadcrumbContext';
 
 const TransferAset = () => {
   const [activeTab, setActiveTab] = useState('mass'); 
@@ -9,6 +10,12 @@ const TransferAset = () => {
   const [areas, setAreas] = useState([]);
   const [schools, setSchools] = useState([]);
   const [assets, setAssets] = useState([]);
+
+  const { setCrumbs } = useBreadcrumb();
+
+  useEffect(() => {
+    setCrumbs(['Transfer Aset']);
+  }, []);
 
   const [massForm, setMassForm] = useState({
     school_id: '',
