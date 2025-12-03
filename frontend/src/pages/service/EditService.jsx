@@ -30,8 +30,11 @@ const EditService = () => {
       try {
         const masterRes = await api.get('/master');
         setMasterOptions(masterRes.data);
-        const res = await api.get(`/services`); 
-        const found = res.data.find(s => s.id === parseInt(id));
+        
+        // Fetch all services to find the specific one (Temporary fix since backend get_by_id missing)
+        const res = await api.get(`/services`, { params: { size: 1000 } });
+        const items = res.data.items || [];
+        const found = items.find(s => s.id === parseInt(id));
         
         if (found) {
             setFormData({

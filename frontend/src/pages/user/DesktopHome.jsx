@@ -8,8 +8,8 @@ const BASE_URL = 'http://localhost:8000';
 
 const DesktopHome = () => {
   const navigate = useNavigate();
-  
   const [user, setUser] = useState({ full_name: 'User', avatar: null });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -26,6 +26,18 @@ const DesktopHome = () => {
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/user/assets?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -97,8 +109,14 @@ const DesktopHome = () => {
                 type="text" 
                 placeholder="Cari Aset berdasarkan Serial Number atau Barcode..." 
                 className="w-full pl-6 pr-14 py-4 rounded-xl border border-gray-200 outline-none text-gray-700 font-medium text-lg focus:ring-4 focus:ring-blue-100 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
             />
-            <button className="absolute right-3 top-3 bg-penabur-blue text-white p-2 rounded-lg hover:bg-penabur-dark transition-colors">
+            <button 
+                onClick={handleSearch}
+                className="absolute right-3 top-3 bg-penabur-blue text-white p-2 rounded-lg hover:bg-penabur-dark transition-colors"
+            >
                 <Search size={24} />
             </button>
         </div>

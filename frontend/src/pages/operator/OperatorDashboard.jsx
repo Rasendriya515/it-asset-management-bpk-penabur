@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, QrCode, Package, User, Building2, MapPin } from 'lucide-react';
+import { Search, QrCode, Package, User } from 'lucide-react';
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 
 const OperatorDashboard = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ total_assets: 0, your_school: 'Loading...' });
+  const [stats, setStats] = useState({ total_assets: 0 });
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -79,13 +79,14 @@ const OperatorDashboard = () => {
           </div>
 
           <div 
-            className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
+            onClick={() => navigate('/profile')}
+            className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-500 cursor-pointer transition-all group"
           >
-            <div className="bg-green-50 w-14 h-14 rounded-lg flex items-center justify-center text-green-600 mb-4">
+            <div className="bg-green-50 w-14 h-14 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors">
               <User size={28}/>
             </div>
-            <h3 className="font-bold text-lg text-gray-800">Area Kerja</h3>
-            <p className="text-sm text-gray-500 mt-1">Anda login sebagai Operator.</p>
+            <h3 className="font-bold text-lg text-gray-800">Profil Saya</h3>
+            <p className="text-sm text-gray-500 mt-1">Lihat dan ubah informasi akun anda.</p>
           </div>
         </div>
 

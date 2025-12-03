@@ -7,8 +7,8 @@ const BASE_URL = 'http://localhost:8000';
 
 const MobileHome = () => {
   const navigate = useNavigate();
-  
   const [user, setUser] = useState({ full_name: 'User', avatar: null });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -25,6 +25,12 @@ const MobileHome = () => {
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
+  };
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/user/assets?search=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   return (
@@ -72,6 +78,9 @@ const MobileHome = () => {
                       type="text" 
                       placeholder="Cari SN / Barcode..." 
                       className="w-full outline-none text-gray-700 placeholder-gray-400 font-medium"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleSearch}
                   />
               </div>
           </div>

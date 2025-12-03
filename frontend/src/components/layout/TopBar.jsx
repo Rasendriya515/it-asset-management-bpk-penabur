@@ -10,6 +10,9 @@ const TopBar = ({ isSidebarOpen, toggleSidebar }) => {
   const { crumbs } = useBreadcrumb();
   const [user, setUser] = useState({ full_name: 'Admin', avatar: null });
   const navigate = useNavigate();
+  
+  // Ambil role dari localStorage untuk pengecekan
+  const role = localStorage.getItem('role');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -47,24 +50,37 @@ const TopBar = ({ isSidebarOpen, toggleSidebar }) => {
             </button>
 
             <div className="flex items-center text-sm font-medium text-gray-500 overflow-hidden whitespace-nowrap mr-4">
-                <span className="flex items-center hover:text-penabur-blue transition-colors cursor-default">
-                    <Home size={14} className="mr-2 mb-0.5" />
-                    IT Asset Management
-                </span>
-
-                {crumbs && crumbs.map((crumb, index) => (
-                    <React.Fragment key={index}>
-                        <ChevronRight size={14} className="mx-2 text-gray-400" />
-                        <span className={`${index === crumbs.length - 1 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
-                            {crumb}
+                
+                {role === 'operator' ? (
+                    // TAMPILAN KHUSUS OPERATOR (JUDUL STATIS)
+                    <span className="flex items-center text-gray-800 font-bold tracking-wide">
+                        <Home size={16} className="mr-2 mb-0.5 text-penabur-blue" />
+                        IT Asset Management - BPK PENABUR
+                    </span>
+                ) : (
+                    // TAMPILAN ADMIN / USER LAIN (DYNAMIC BREADCRUMBS)
+                    <>
+                        <span className="flex items-center hover:text-penabur-blue transition-colors cursor-default">
+                            <Home size={14} className="mr-2 mb-0.5" />
+                            IT Asset Management
                         </span>
-                    </React.Fragment>
-                ))}
+
+                        {crumbs && crumbs.map((crumb, index) => (
+                            <React.Fragment key={index}>
+                                <ChevronRight size={14} className="mx-2 text-gray-400" />
+                                <span className={`${index === crumbs.length - 1 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
+                                    {crumb}
+                                </span>
+                            </React.Fragment>
+                        ))}
+                    </>
+                )}
+
             </div>
         </div>
 
         <div className="flex items-center space-x-4 flex-shrink-0">
-            <Link to="/profile" className="flex items-center space-x-3 hover:bg-gray-50 py-1 px-2 rounded-lg transition-colors cursor-pointer">
+            <Link to={role === 'user' ? "/user/profile" : "/profile"} className="flex items-center space-x-3 hover:bg-gray-50 py-1 px-2 rounded-lg transition-colors cursor-pointer">
                 <div className="text-right hidden sm:block">
                     <p className="text-sm font-bold text-gray-700">{user.full_name || 'Admin'}</p>
                     <p className="text-xs text-green-600 font-medium">Online</p>

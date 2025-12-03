@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeftRight, Building2, MapPin, CheckCircle, AlertTriangle, Box, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeftRight, Building2, AlertTriangle, Box, Loader2, CheckCircle } from 'lucide-react';
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 import { useBreadcrumb } from '../../context/BreadcrumbContext';
@@ -61,10 +61,16 @@ const TransferAset = () => {
       const fetchAssets = async () => {
         setLoading(true);
         try {
-          const res = await api.get('/assets', { params: { school_id: partialForm.source_school_id } });
-          setAssets(res.data);
+          const res = await api.get('/assets', { 
+            params: { 
+              school_id: partialForm.source_school_id,
+              size: 1000 
+            } 
+          });
+          setAssets(res.data.items || []);
         } catch (error) {
           console.error(error);
+          setAssets([]);
         } finally {
           setLoading(false);
         }
@@ -103,8 +109,8 @@ const TransferAset = () => {
       setModalStep(0);
       setPartialForm(prev => ({ ...prev, selected_assets: [] }));
       
-      const res = await api.get('/assets', { params: { school_id: partialForm.source_school_id } });
-      setAssets(res.data);
+      const res = await api.get('/assets', { params: { school_id: partialForm.source_school_id, size: 1000 } });
+      setAssets(res.data.items || []);
 
     } catch (error) {
       alert("Gagal melakukan transfer aset.");
@@ -183,12 +189,6 @@ const TransferAset = () => {
                       <option value="">-- Pilih Sekolah --</option>
                       {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <div className="bg-gray-100 p-3 rounded-full">
-                      <ArrowRight className="text-gray-400" />
-                    </div>
                   </div>
 
                   <div className="space-y-2">

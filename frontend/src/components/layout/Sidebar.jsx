@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Map, History, FileClock, LogOut, ChevronDown, ChevronRight, ArrowLeftRight, Database, QrCode, Package } from 'lucide-react';
+import { LayoutDashboard, Map, History, FileClock, LogOut, ChevronDown, ChevronRight, ArrowLeftRight, Database, QrCode, Package, X } from 'lucide-react';
 import api from '../../services/api';
 import logoBpk from '../../assets/images/logo-bpk.png';
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -36,21 +36,29 @@ const Sidebar = ({ isOpen }) => {
 
   return (
     <div className={`
-      fixed left-0 top-0 h-screen w-64 bg-penabur-dark text-white shadow-2xl z-20 flex flex-col
+      fixed left-0 top-0 h-screen w-64 bg-penabur-dark text-white shadow-2xl z-30 flex flex-col
       transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full'}
     `}>
       
-      <div className="h-24 flex items-center px-6 border-b border-gray-700">
-        <img 
-          src={logoBpk} 
-          alt="Logo" 
-          className="h-10 w-auto mr-3 object-contain hover:scale-105 transition-transform"
-        />
-        <div>
-          <h1 className="font-bold text-sm leading-tight text-white">IT Asset Management</h1>
-          <p className="text-xs text-gray-400 font-medium capitalize">{role || 'User'}</p>
+      <div className="h-16 md:h-24 flex items-center justify-between px-6 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center">
+            <img 
+            src={logoBpk} 
+            alt="Logo" 
+            className="h-8 md:h-10 w-auto mr-3 object-contain hover:scale-105 transition-transform"
+            />
+            <div>
+            <h1 className="font-bold text-xs md:text-sm leading-tight text-white">IT Asset Management</h1>
+            <p className="text-[10px] md:text-xs text-gray-400 font-medium capitalize">{role || 'User'}</p>
+            </div>
         </div>
+        <button 
+            onClick={toggleSidebar}
+            className="md:hidden text-gray-400 hover:text-white transition-colors"
+        >
+            <X size={24} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-6 space-y-2 px-3">
@@ -166,7 +174,7 @@ const Sidebar = ({ isOpen }) => {
 
       </div>
 
-      <div className="p-4 border-t border-white/10 bg-black/20">
+      <div className="p-4 border-t border-white/10 bg-black/20 mt-auto">
         <button 
           onClick={handleLogout}
           className="bg-red-600 text-white w-full px-4 py-2.5 rounded-xl hover:bg-red-700 transition-all duration-200 hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 font-bold text-sm border border-red-500"

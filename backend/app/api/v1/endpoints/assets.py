@@ -61,7 +61,8 @@ def read_assets(
         "serial_number": Asset.serial_number,
         "status": Asset.status,
         "created_at": Asset.created_at,
-        "updated_at": Asset.updated_at
+        "updated_at": Asset.updated_at,
+        "asset_name": Asset.brand
     }
     
     db_sort_field = sort_fields.get(sort_by, Asset.created_at)
@@ -169,12 +170,14 @@ def delete_asset(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    asset = db.query(Asset).options(joinedload(Asset.school)).filter(Asset.id == asset_id).first()
+    
     if not asset:
         raise HTTPException(status_code=404, detail="Aset tidak ditemukan")
-    school_name, area_name = get_location_info(db, asset.school_id)
     
+    school_name, area_name = get_location_info(db, asset.school_id)
     actor_name = current_user.full_name if current_user.full_name else current_user.email
+    deleted_asset_response = AssetResponse.model_validate(asset)
 
     log = UpdateLog(
         asset_barcode=asset.barcode,
@@ -189,4 +192,5 @@ def delete_asset(
 
     db.delete(asset)
     db.commit()
-    return asset
+
+    return deleted_asset_response

@@ -3,15 +3,23 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 
 const MainLayout = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <div className="min-h-screen bg-penabur-light">
-      <Sidebar isOpen={isSidebarOpen} />
+    <div className="min-h-screen bg-penabur-light relative">
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      
       <div className={`${isSidebarOpen ? 'md:ml-64' : 'ml-0'} min-h-screen flex flex-col transition-all duration-300`}>
         <TopBar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 

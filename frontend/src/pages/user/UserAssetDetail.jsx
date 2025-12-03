@@ -13,11 +13,7 @@ const UserAssetDetail = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (isMobile) {
-    return <MobileAssetDetail />;
-  } else {
-    return <DesktopAssetDetail />;
-  }
+  return isMobile ? <MobileAssetDetail /> : <DesktopAssetDetail />;
 };
 
 export default UserAssetDetail;

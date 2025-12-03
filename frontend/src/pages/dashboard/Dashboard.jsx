@@ -26,20 +26,26 @@ const Dashboard = () => {
 
   useEffect(() => {
     setCrumbs(['Dashboard']);
-  }, []);
-
-  useEffect(() => {
+    
     const fetchStats = async () => {
       try {
-        const res = await api.get('/dashboard/stats');
+        // Menambahkan timestamp untuk mencegah caching browser
+        const res = await api.get('/dashboard/stats', {
+            params: { _t: new Date().getTime() }
+        });
         setStats(res.data);
       } catch (error) {
-        console.error(error);
+        console.error("Gagal memuat statistik dashboard", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchStats();
+
+    // Auto-refresh data setiap 30 detik agar benar-benar realtime
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -52,8 +58,13 @@ const Dashboard = () => {
     );
   }
 
-  const chartValues = stats ? Object.values(stats.chart_data) : [];
+  // Memastikan urutan data chart selalu Jan-Des
+  const monthKeys = ["01","02","03","04","05","06","07","08","09","10","11","12"];
+  const chartValues = stats ? monthKeys.map(k => stats.chart_data[k] || 0) : [];
   const maxChartValue = Math.max(...chartValues, 1);
+  
+  const currentMonthIndex = new Date().getMonth(); 
+  const currentMonthCount = chartValues[currentMonthIndex] || 0;
 
   return (
     <MainLayout>
@@ -68,25 +79,25 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             title="Total Aset" 
-            count={stats.total_assets} 
+            count={stats?.total_assets || 0} 
             icon={<Database size={24} className="text-blue-600"/>} 
             color="bg-blue-100" 
           />
           <StatCard 
             title="Aset Hardware" 
-            count={stats.total_hardware} 
+            count={stats?.total_hardware || 0} 
             icon={<Monitor size={24} className="text-purple-600"/>} 
             color="bg-purple-100" 
           />
           <StatCard 
             title="Perlu Perhatian" 
-            count={stats.need_attention} 
+            count={stats?.need_attention || 0} 
             icon={<AlertCircle size={24} className="text-red-600"/>} 
             color="bg-red-100" 
           />
           <StatCard 
             title="Aset Baru (Bulan ini)" 
-            count={chartValues[new Date().getMonth()] || 0} 
+            count={currentMonthCount} 
             icon={<TrendingUp size={24} className="text-green-600"/>} 
             color="bg-green-100" 
           />
@@ -96,8 +107,8 @@ const Dashboard = () => {
             <h3 className="font-bold text-gray-800 mb-4">Statistik Pengadaan Aset (Berdasarkan Bulan)</h3>
             <div className="h-64 bg-gray-50 rounded-lg flex items-end justify-around p-4 border border-dashed border-gray-300">
               
-              {["01","02","03","04","05","06","07","08","09","10","11","12"].map((monthKey, index) => {
-                const count = stats.chart_data[monthKey] || 0;
+              {monthKeys.map((monthKey, index) => {
+                const count = stats?.chart_data[monthKey] || 0;
                 const numCount = parseInt(count); 
                 
                 let heightPercent = 0;
@@ -128,7 +139,7 @@ const Dashboard = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full">
             <h3 className="font-bold text-gray-800 mb-4">Aset Terbaru Ditambahkan</h3>
             <div className="space-y-4 flex-1 overflow-y-auto pr-2 max-h-[300px]">
-              {stats.recent_assets.length === 0 ? (
+              {(!stats?.recent_assets || stats.recent_assets.length === 0) ? (
                 <p className="text-sm text-gray-400 text-center py-4">Belum ada aktivitas.</p>
               ) : (
                 stats.recent_assets.map((asset) => (
