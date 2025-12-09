@@ -13,10 +13,10 @@ Sistem Informasi Manajemen Aset IT berbasis web yang dirancang untuk memodernisa
 
 ## 📸 Tampilan Aplikasi
 
-|             **Dashboard Admin**              |      **Mobile View & QR Scan**       |
-| :------------------------------------------: | :----------------------------------: |
-|   ![Dashboard](screenshots/dashboard.png)    | ![Mobile](screenshots/mobile-qr.png) |
-| _Statistik aset realtime & grafik pengadaan_ | _Akses mudah bagi operator lapangan_ |
+|              **Dashboard Admin**               |      **Mobile View & QR Scan**       |
+| :--------------------------------------------: | :----------------------------------: |
+| ![Dashboard](screenshots/Dashboard Admin.jpeg) | ![Mobile](screenshots/QR Code.jpeg)  |
+|  _Statistik aset realtime & grafik pengadaan_  | _Akses mudah bagi operator lapangan_ |
 
 ---
 
