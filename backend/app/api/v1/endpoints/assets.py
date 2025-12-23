@@ -234,7 +234,6 @@ async def import_assets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Validasi Role
     if current_user.role != "admin":
          raise HTTPException(status_code=403, detail="Hanya Admin yang bisa Import")
 
@@ -252,25 +251,31 @@ async def import_assets(
         for index, row in df.iterrows():
             try:
                 asset_data = AssetCreate(
-                    name=row.get('Nama Aset'),
-                    category=row.get('Kategori'),
                     barcode=str(row.get('Barcode')),
-                    serial_number=str(row.get('SN')) if row.get('SN') else None,
-                    school_id=int(row.get('School ID')), 
-                    location_id=int(row.get('Location ID')) if row.get('Location ID') else None,
-                    status=row.get('Status', 'Berfungsi'),
+                    serial_number=str(row.get('Serial Number')),
+                    school_id=int(row.get('School ID')),
+                    city_code=str(row.get('City Code')),
+                    type_code=str(row.get('Type Code')),
+                    category_code=row.get('Category Code'),
+                    subcategory_code=row.get('Subcategory Code'),
+                    procurement_month=str(row.get('Month')).zfill(2),
+                    procurement_year=str(row.get('Year')),
+                    floor=str(row.get('Floor')).zfill(2),
+                    sequence_number=str(row.get('Sequence')).zfill(3),
+                    brand=row.get('Brand'),
+                    model_series=row.get('Model'),
+                    room=row.get('Room'),
+                    placement=row.get('Placement'),
                     ip_address=row.get('IP Address'),
                     mac_address=row.get('MAC Address'),
-                    processor=row.get('Processor'),
                     ram=row.get('RAM'),
+                    processor=row.get('Processor'),
                     storage=row.get('Storage'),
-                    brand=row.get('Brand'),
-                    purchase_date=pd.to_datetime(row.get('Tanggal Beli')).date() if row.get('Tanggal Beli') else None,
-                    price=row.get('Harga'),
-                    condition_notes=row.get('Kondisi'),
-                    current_user=row.get('Pengguna'),
+                    os=row.get('OS'),
                     username=row.get('Username'),
-                    password=row.get('Password')
+                    password=row.get('Password'),
+                    assigned_to=row.get('Assigned To'),
+                    status=row.get('Status') or "Berfungsi"
                 )
                 
                 validate_ip_mac(db, asset_data)
@@ -281,10 +286,10 @@ async def import_assets(
                 
             except Exception as e:
                 db.rollback()
-                errors.append(f"Row {index+2}: {str(e)}")
+                errors.append(f"Baris {index+2}: {str(e)}")
         
         return {
-            "message": "Import selesai",
+            "message": "Proses Import Selesai",
             "success_count": success_count,
             "errors": errors
         }

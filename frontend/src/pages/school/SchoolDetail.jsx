@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, ArrowLeft, Download, Database, Pencil, Trash2, FileText, QrCode, X, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { 
+  Search, Plus, ArrowLeft, Download, Database, Pencil, Trash2, 
+  FileText, QrCode, X, ChevronLeft, ChevronRight, ArrowUpDown, 
+  Eye, EyeOff, FileSpreadsheet 
+} from 'lucide-react';
 import MainLayout from '../../components/layout/MainLayout';
 import api from '../../services/api';
 import { TABLE_COLUMNS } from '../../constants/assetData';
@@ -22,8 +26,12 @@ const SchoolDetail = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSub, setSelectedSub] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [selectedAssetQR, setSelectedAssetQR] = useState(null);
+  const [showSensitive, setShowSensitive] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false); 
+  const [fileImport, setFileImport] = useState(null); 
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -133,6 +141,24 @@ const SchoolDetail = () => {
     });
   };
 
+  const handleImportProcess = async () => {
+    if(!fileImport) return alert("Pilih file dulu!");
+    const formData = new FormData();
+    formData.append("file", fileImport);
+    try {
+        await api.post("/assets/import", formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
+        alert("Import Berhasil!");
+        setShowImportModal(false);
+        setFileImport(null);
+        fetchAssetData();
+    } catch (err) {
+        console.error(err);
+        alert("Gagal Import: " + (err.response?.data?.detail || "Terjadi kesalahan"));
+    }
+  };
+
   const handleExport = () => {
     const dataToExport = assets.map((asset, index) => {
       return {
@@ -200,7 +226,7 @@ const SchoolDetail = () => {
     }
   };
 
-  const handleViewQR = (asset) => {
+  const handleGenerateQR = (asset) => {
     setSelectedAssetQR(asset);
     setQrModalOpen(true);
   };
@@ -225,10 +251,8 @@ const SchoolDetail = () => {
   };
 
   const getQRContent = (asset) => {
-    if(!asset || !schoolInfo) return "";
-    const baseUrl = window.location.origin; 
-    const assetUrl = `${baseUrl}/user/asset/${asset.id}`; 
-    return `BPK PENABUR ASSET\n------------------\nNama: ${asset.brand} ${asset.model_series}\nSN: ${asset.serial_number}\nBarcode: ${asset.barcode}\nSekolah: ${schoolInfo.name}\nLokasi: ${asset.room} (Lt. ${asset.floor})\nStatus: ${asset.status}\n------------------\nLink: ${assetUrl}`;
+    if(!asset) return "";
+    return `${window.location.origin}/scan-asset/${asset.id}`;
   };
 
   const visibleColumns = getVisibleColumns();
@@ -292,6 +316,27 @@ const SchoolDetail = () => {
                 </select>
             </div>
             <div className="flex space-x-2">
+
+                <button
+                    onClick={() => setShowSensitive(!showSensitive)}
+                    className={`px-3 py-1 rounded-md text-sm flex items-center font-medium transition-colors ${
+                        showSensitive ? 'bg-orange-100 text-orange-700' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                    title={showSensitive ? "Sembunyikan Info User" : "Tampilkan Info User"}
+                >
+                    {showSensitive ? <EyeOff size={16} className="mr-2"/> : <Eye size={16} className="mr-2"/>}
+                    {showSensitive ? "Hide Info" : "Show Info"}
+                </button>
+
+                {role === 'admin' && (
+                    <button 
+                        onClick={() => setShowImportModal(true)}
+                        className="text-green-700 hover:bg-green-50 px-3 py-1 rounded-md text-sm flex items-center font-medium"
+                    >
+                        <FileSpreadsheet size={16} className="mr-2"/> Import
+                    </button>
+                )}
+
                 <button onClick={handleExportPDF} className="text-red-600 hover:bg-red-50 px-3 py-1 rounded-md text-sm flex items-center font-medium"><FileText size={16} className="mr-2"/> PDF</button>
                 <button onClick={handleExport} className="text-green-600 hover:bg-green-50 px-3 py-1 rounded-md text-sm flex items-center font-medium"><Download size={16} className="mr-2"/> Excel</button>
             </div>
@@ -307,6 +352,11 @@ const SchoolDetail = () => {
                       <div className="flex items-center gap-1">{col.label} <ArrowUpDown size={12}/></div>
                     </th>
                   ))}
+                  
+                  {showSensitive && <th className="p-4 border-b border-gray-200 bg-orange-50">Pengguna</th>}
+                  {showSensitive && <th className="p-4 border-b border-gray-200 bg-orange-50">Username</th>}
+                  {showSensitive && <th className="p-4 border-b border-gray-200 bg-orange-50">Password</th>}
+
                   <th className="p-4 border-b border-gray-200 text-center sticky right-0 bg-gray-50 shadow-l z-10 min-w-[150px]">Action</th>
                 </tr>
               </thead>
@@ -330,9 +380,15 @@ const SchoolDetail = () => {
                           )}
                         </td>
                       ))}
+
+                      {showSensitive && <td className="p-4 text-gray-700 bg-orange-50/30">{asset.assigned_to || '-'}</td>}
+                      {showSensitive && <td className="p-4 text-gray-700 bg-orange-50/30">{asset.username || '-'}</td>}
+                      {showSensitive && <td className="p-4 text-gray-700 bg-orange-50/30">******</td>}
+
                       <td className="p-3 text-center sticky right-0 bg-white group-hover:bg-blue-50 shadow-l border-l border-gray-100 z-10">
                         <div className="flex items-center justify-center space-x-2">
-                          <button onClick={() => handleViewQR(asset)} className="bg-purple-50 text-purple-700 p-2 rounded-lg" title="QR"><QrCode size={16}/></button>
+                          {/* ✅ Tombol QR Code (Updated Handler) */}
+                          <button onClick={() => handleGenerateQR(asset)} className="bg-purple-50 text-purple-700 p-2 rounded-lg" title="QR"><QrCode size={16}/></button>
                           {role !== 'user' && (
                             <>
                                 <Link to={`/school/${id}/asset/${asset.id}/edit`}>
@@ -371,17 +427,48 @@ const SchoolDetail = () => {
             </div>
             <div className="p-8 flex flex-col items-center justify-center space-y-6">
               <div className="bg-white p-4 rounded-xl border-4 border-gray-100 shadow-inner">
+                {/* QR Code sekarang menyimpan LINK URL ke halaman scan */}
                 <QRCode id="qr-code-svg" value={getQRContent(selectedAssetQR)} size={200} level="H" />
               </div>
               <div className="text-center space-y-1">
-                <p className="font-bold text-gray-800 text-lg">{selectedAssetQR.brand}</p>
+                <p className="font-bold text-gray-800 text-lg">{selectedAssetQR.brand} {selectedAssetQR.model_series}</p>
                 <p className="text-penabur-blue font-mono font-medium">{selectedAssetQR.barcode}</p>
+                <p className="text-xs text-gray-400 mt-2">Scan untuk melihat status realtime</p>
               </div>
               <button onClick={downloadQR} className="w-full bg-penabur-blue text-white py-2.5 rounded-lg font-bold hover:bg-penabur-dark flex items-center justify-center shadow-lg">
                   <Download size={18} className="mr-2" /> Download Gambar
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white p-6 rounded-xl w-96 shadow-2xl">
+                <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                    <FileSpreadsheet className="mr-2 text-green-600"/> Import Excel
+                </h2>
+                <div className="mb-4">
+                    <p className="text-sm text-gray-500 mb-2">Pilih file .xlsx untuk upload data aset secara massal.</p>
+                    <input 
+                        type="file" 
+                        accept=".xlsx, .xls"
+                        onChange={(e) => setFileImport(e.target.files[0])}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                </div>
+                <div className="flex justify-end gap-2 mt-6">
+                    <button onClick={() => {setShowImportModal(false); setFileImport(null);}} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">Batal</button>
+                    <button 
+                        onClick={handleImportProcess} 
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors shadow-md disabled:opacity-50"
+                        disabled={!fileImport}
+                    >
+                        Upload Data
+                    </button>
+                </div>
+            </div>
         </div>
       )}
     </MainLayout>

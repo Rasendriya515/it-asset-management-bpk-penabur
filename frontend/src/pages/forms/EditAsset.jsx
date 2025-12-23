@@ -18,6 +18,9 @@ const EditAsset = () => {
 
   const [masterOptions, setMasterOptions] = useState([]);
 
+  const role = localStorage.getItem('role');
+  const isOperator = role === 'operator';
+
   const [formData, setFormData] = useState({
     city_code: '',
     type_code: '',
@@ -97,6 +100,7 @@ const EditAsset = () => {
         return opt.category === category && !opt.parent_code;
     });
   };
+
   useEffect(() => {
     if (!loadingData) {
         const { city_code, type_code, category_code, subcategory_code, procurement_month, procurement_year, floor, sequence_number } = formData;
@@ -153,6 +157,7 @@ const EditAsset = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-penabur-blue"></div>
             <div className="flex items-center justify-between mb-6">
@@ -167,25 +172,25 @@ const EditAsset = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kota</label>
-                <select name="city_code" value={formData.city_code} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue bg-white">
+                <select name="city_code" value={formData.city_code} disabled={isOperator} onChange={handleChange} className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
                   {getOptions('CITY').map(opt => <option key={opt.id} value={opt.code}>{opt.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipe Aset</label>
-                <select name="type_code" value={formData.type_code} required onChange={(e) => setFormData(prev => ({ ...prev, type_code: e.target.value, category_code: '', subcategory_code: '' }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue bg-white">
+                <select name="type_code" value={formData.type_code} required disabled={isOperator} onChange={(e) => setFormData(prev => ({ ...prev, type_code: e.target.value, category_code: '', subcategory_code: '' }))} className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
                   {getOptions('ASSET_TYPE').map(opt => <option key={opt.id} value={opt.code}>{opt.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                <select name="category_code" value={formData.category_code} required disabled={!formData.type_code} onChange={(e) => setFormData(prev => ({ ...prev, category_code: e.target.value, subcategory_code: '' }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue disabled:bg-gray-50 bg-white">
+                <select name="category_code" value={formData.category_code} required disabled={isOperator || !formData.type_code} onChange={(e) => setFormData(prev => ({ ...prev, category_code: e.target.value, subcategory_code: '' }))} className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue disabled:bg-gray-50 bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
                   {getOptions('ASSET_CATEGORY', formData.type_code).map(opt => <option key={opt.id} value={opt.code}>{opt.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jenis (Opsional)</label>
-                <select name="subcategory_code" value={formData.subcategory_code} disabled={!formData.category_code} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue disabled:bg-gray-50 bg-white">
+                <select name="subcategory_code" value={formData.subcategory_code} disabled={isOperator || !formData.category_code} onChange={handleChange} className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-penabur-blue disabled:bg-gray-50 bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
                   <option value="">- Tidak Ada -</option>
                   {getOptions('ASSET_SUBCATEGORY', formData.category_code).map(opt => <option key={opt.id} value={opt.code}>{opt.label}</option>)}
                 </select>
@@ -193,27 +198,28 @@ const EditAsset = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
-                   <select name="procurement_month" value={formData.procurement_month} onChange={handleChange} className="w-full px-2 py-2 border border-gray-300 rounded-lg outline-none bg-white">{Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select>
+                   <select name="procurement_month" value={formData.procurement_month} disabled={isOperator} onChange={handleChange} className={`w-full px-2 py-2 border border-gray-300 rounded-lg outline-none bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>{Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select>
                 </div>
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
-                   <select name="procurement_year" value={formData.procurement_year} onChange={handleChange} className="w-full px-2 py-2 border border-gray-300 rounded-lg outline-none bg-white">{Array.from({length: 25}, (_, i) => String(i + 16).padStart(2, '0')).map(y => <option key={y} value={y}>20{y}</option>)}</select>
+                   <select name="procurement_year" value={formData.procurement_year} disabled={isOperator} onChange={handleChange} className={`w-full px-2 py-2 border border-gray-300 rounded-lg outline-none bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>{Array.from({length: 25}, (_, i) => String(i + 16).padStart(2, '0')).map(y => <option key={y} value={y}>20{y}</option>)}</select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Lantai</label>
-                   <select name="floor" value={formData.floor} onChange={handleChange} className="w-full px-2 py-2 border border-gray-300 rounded-lg outline-none bg-white">
+                   <select name="floor" value={formData.floor} disabled={isOperator} onChange={handleChange} className={`w-full px-2 py-2 border border-gray-300 rounded-lg outline-none bg-white ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
                       {getOptions('FLOOR').map(opt => <option key={opt.id} value={opt.code}>{opt.label}</option>)}
                    </select>
                 </div>
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">No Urut</label>
-                   <input type="text" name="sequence_number" maxLength="3" value={formData.sequence_number} onChange={(e) => setFormData(prev => ({...prev, sequence_number: e.target.value.replace(/\D/g, '')}))} onBlur={() => setFormData(prev => ({...prev, sequence_number: prev.sequence_number.padStart(3, '0')}))} className="w-full px-2 py-2 border border-gray-300 rounded-lg outline-none text-center font-mono"/>
+                   <input type="text" name="sequence_number" disabled={isOperator} maxLength="3" value={formData.sequence_number} onChange={(e) => setFormData(prev => ({...prev, sequence_number: e.target.value.replace(/\D/g, '')}))} onBlur={() => setFormData(prev => ({...prev, sequence_number: prev.sequence_number.padStart(3, '0')}))} className={`w-full px-2 py-2 border border-gray-300 rounded-lg outline-none text-center font-mono ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}/>
                 </div>
               </div>
             </div>
           </div>
+
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-1 h-full bg-penabur-gold"></div>
              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
@@ -240,6 +246,7 @@ const EditAsset = () => {
                 </div>
              </div>
           </div>
+
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
@@ -248,7 +255,7 @@ const EditAsset = () => {
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-1">
                     <label className="block text-sm font-bold text-gray-700 mb-1">Serial Number</label>
-                    <input type="text" name="serial_number" required value={formData.serial_number} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"/>
+                    <input type="text" name="serial_number" required disabled={isOperator} value={formData.serial_number} onChange={handleChange} className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}/>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">IP Address</label>
@@ -256,7 +263,7 @@ const EditAsset = () => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">MAC Address</label>
-                    <input type="text" name="mac_address" value={formData.mac_address} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"/>
+                    <input type="text" name="mac_address" disabled={isOperator} value={formData.mac_address} onChange={handleChange} className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}/>
                 </div>
                 <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg">
                     <div>
@@ -292,9 +299,34 @@ const EditAsset = () => {
                 <div className="absolute top-0 left-0 w-1 h-full bg-red-400"></div>
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center"><Shield className="mr-2 text-red-400"/> 4. User & Akses</h3>
                 <div className="space-y-3">
-                    <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"/>
-                    <input type="text" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"/>
-                    <input type="text" name="assigned_to" placeholder="Pengguna" value={formData.assigned_to} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"/>
+
+                    <input 
+                        type={isOperator ? "password" : "text"} 
+                        name="username" 
+                        placeholder="Username" 
+                        value={formData.username} 
+                        onChange={handleChange} 
+                        disabled={isOperator}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
+                    <input 
+                        type="password" 
+                        name="password" 
+                        placeholder="Password" 
+                        value={formData.password} 
+                        onChange={handleChange} 
+                        disabled={isOperator}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
+                    <input 
+                        type="text" 
+                        name="assigned_to" 
+                        placeholder="Pengguna" 
+                        value={formData.assigned_to} 
+                        onChange={handleChange} 
+                        readOnly={isOperator}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none ${isOperator ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    />
                 </div>
              </div>
 

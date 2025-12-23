@@ -20,6 +20,7 @@ import UserAssetList from './pages/user/UserAssetList';
 import TransferAset from './pages/asset/TransferAset';
 import MasterData from './pages/admin/MasterData';
 import OperatorDashboard from './pages/operator/OperatorDashboard';
+import ScanResult from "./pages/user/ScanResult";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -52,22 +53,17 @@ function App() {
           <Route path="/service-history" element={<ProtectedRoute allowedRoles={['admin']}><ServiceHistory /></ProtectedRoute>} />
           <Route path="/service-history/add" element={<ProtectedRoute allowedRoles={['admin']}><AddService /></ProtectedRoute>} />
           <Route path="/service-history/edit/:id" element={<ProtectedRoute allowedRoles={['admin']}><EditService /></ProtectedRoute>} />
-          
           <Route path="/update-history" element={<ProtectedRoute allowedRoles={['admin']}><UpdateHistory /></ProtectedRoute>} />
-    
           <Route path="/transfer-asset" element={<ProtectedRoute allowedRoles={['admin']}><TransferAset /></ProtectedRoute>} />
           <Route path="/master-data" element={<ProtectedRoute allowedRoles={['admin']}><MasterData /></ProtectedRoute>} />
           <Route path="/operator/dashboard" element={<ProtectedRoute allowedRoles={['operator']}><OperatorDashboard /></ProtectedRoute>} />
-          
           <Route path="/user/assets" element={<ProtectedRoute allowedRoles={['user', 'operator']}><UserAssetList /></ProtectedRoute>} />
           <Route path="/user/scan" element={<ProtectedRoute allowedRoles={['user', 'operator']}><ScanQR /></ProtectedRoute>} />
           <Route path="/user/asset/:id" element={<ProtectedRoute allowedRoles={['user', 'operator']}><UserAssetDetail /></ProtectedRoute>} />
-          
           <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'operator']}><Profile /></ProtectedRoute>} />
           <Route path="/user/profile" element={<ProtectedRoute allowedRoles={['user']}><UserProfile /></ProtectedRoute>} />
-          
           <Route path="/user/home" element={<ProtectedRoute allowedRoles={['user']}><UserHome /></ProtectedRoute>} />
-
+          <Route path="/scan-asset/:id" element={<ScanResult />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
