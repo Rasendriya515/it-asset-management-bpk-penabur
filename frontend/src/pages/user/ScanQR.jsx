@@ -1,92 +1,103 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import React, { useEffect, useState, useRef } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import MainLayout from '../../components/layout/MainLayout';
 
 const ScanQR = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef(null);
 
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      { 
+
+    const readerElement = document.getElementById("reader");
+    if (readerElement) {
+        readerElement.innerHTML = "";
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    scannerRef.current = html5QrCode;
+    const config = { 
         fps: 10, 
         qrbox: { width: 250, height: 250 },
-        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-        supportedScanTypes: [] 
-      },
-      false
-    );
-
-    const onScanSuccess = (decodedText) => {
-      try {
-        const linkMatch = decodedText.match(/Link:\s*(.*)/);
-        
-        if (linkMatch && linkMatch[1]) {
-          const fullUrl = linkMatch[1].trim();
-          const urlObj = new URL(fullUrl);
-          const pathParts = urlObj.pathname.split('/');
-          const assetId = pathParts[pathParts.length - 1];
-
-          if (assetId && !isNaN(assetId)) {
-            scanner.clear();
-            navigate(`/user/asset/${assetId}`);
-          } else {
-            setError("QR Code tidak valid (ID tidak ditemukan).");
-          }
-        } else {
-          if (decodedText.includes('/mobile/asset/') || decodedText.includes('/user/asset/')) {
-             const urlParts = decodedText.split('/');
-             const id = urlParts[urlParts.length - 1];
-             scanner.clear();
-             navigate(`/user/asset/${id}`);
-          } else {
-             setError("Ini bukan QR Code Aset BPK Penabur.");
-          }
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Gagal memproses QR Code.");
-      }
+        aspectRatio: 1.0
     };
 
-    const onScanFailure = (error) => {};
-
-    scanner.render(onScanSuccess, onScanFailure);
-    scannerRef.current = scanner;
+    html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText) => {
+        handleScanSuccess(decodedText);
+      },
+      (errorMessage) => {
+      }
+    ).then(() => {
+        setIsScanning(true);
+        setErrorMsg('');
+    }).catch((err) => {
+        setIsScanning(false);
+        // Cek jenis error
+        if (typeof err === 'string' && err.includes('Permission')) {
+            setErrorMsg("Izin kamera ditolak. Mohon izinkan akses kamera di browser.");
+        } else {
+            console.log("Camera Start Warning:", err);
+        }
+    });
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(error => console.error("Failed to clear html5qrcode", error));
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch((err) => console.warn("Stop failed", err));
+        scannerRef.current.clear();
       }
     };
-  }, [navigate]);
+  }, []);
+
+  const handleScanSuccess = (decodedText) => {
+    if (scannerRef.current) {
+        // Stop scanning dulu sebelum pindah halaman
+        scannerRef.current.stop().then(() => {
+            scannerRef.current.clear();
+            
+            // Logika Redirect
+            if (decodedText.includes('/scan-asset/')) {
+                const parts = decodedText.split('/scan-asset/');
+                const barcode = parts[1];
+                navigate(`/scan-result/${barcode}`);
+            } else {
+                navigate(`/scan-result/${decodedText}`);
+            }
+        }).catch(err => console.error("Stop failed on success", err));
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center relative">
-      <button 
-        onClick={() => navigate('/user/home')}
-        className="absolute top-6 left-6 z-10 bg-white/20 p-2 rounded-full text-white backdrop-blur-sm hover:bg-white/30"
-      >
-        <ArrowLeft size={24} />
-      </button>
-
-      <h2 className="text-white font-bold text-xl mb-8 z-10 tracking-wide">Scan QR Aset</h2>
-
-      <div className="w-full max-w-sm px-4 relative z-0">
-        <div id="reader" className="bg-white rounded-xl overflow-hidden shadow-2xl border-4 border-penabur-blue"></div>
-        <p className="text-gray-400 text-center text-xs mt-4">Arahkan kamera ke QR Code yang tertempel di aset.</p>
-      </div>
-
-      {error && (
-        <div className="absolute bottom-10 bg-red-500/90 text-white px-6 py-3 rounded-lg shadow-lg flex items-center animate-bounce">
-          <AlertCircle size={20} className="mr-2" />
-          {error}
+    <MainLayout>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Scan QR Aset</h1>
+        
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-lg mx-auto">
+            <div className="relative bg-black rounded-lg overflow-hidden min-h-[300px]">
+                {/* ID ini penting untuk library kamera */}
+                <div id="reader" className="w-full h-full"></div>
+                {!isScanning && !errorMsg && (
+                    <div className="absolute inset-0 flex items-center justify-center text-white z-10">
+                        <p>Memuat Kamera...</p>
+                    </div>
+                )}
+            </div>
+            {errorMsg && (
+                <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm text-center border border-red-200">
+                    ⚠️ {errorMsg}
+                </div>
+            )}
+            
+            <div className="mt-4 text-center text-sm text-gray-500">
+                <p>Arahkan kamera laptop/HP ke QR Code.</p>
+            </div>
         </div>
-      )}
-    </div>
+      </div>
+    </MainLayout>
   );
 };
 

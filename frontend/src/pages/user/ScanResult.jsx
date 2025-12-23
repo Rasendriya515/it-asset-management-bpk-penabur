@@ -30,22 +30,22 @@ const ScanResult = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 flex flex-col items-center">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md overflow-hidden border border-gray-200">
+      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md overflow-hidden border border-blue-500">
         <div className="bg-blue-900 p-6 flex flex-col items-center text-white">
-          <img src={bpkLogo} alt="Logo" className="h-16 mb-3 bg-white rounded-full p-1" />
-          <h1 className="text-xl font-bold tracking-wide">ASSET INFO</h1>
+          <img src={bpkLogo} alt="Logo" className="h-16 mb-3 p-1" />
+          <h1 className="text-xl font-bold tracking-wide">INFORMASI ASET</h1>
           <span className="text-xs opacity-80 mt-1">Realtime Verification System</span>
         </div>
 
         <div className="p-6 space-y-4">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">{assetName}</h2>
-            <p className="text-sm text-gray-500">{asset.category_code || "-"}</p>
+            <p className="text-md text-gray-600">{asset.category_code || "-"}</p>
           </div>
 
           <div className="space-y-3 text-sm">
              <InfoRow label="Status" value={asset.status} isStatus />
-             <InfoRow label="Barcode" value={asset.barcode} />
+             <InfoRow label="Barcode IT" value={asset.barcode} />
              <InfoRow label="Serial Number" value={asset.serial_number || "-"} />
              <InfoRow label="Sekolah" value={asset.school?.name || "-"} />
              <InfoRow label="Lokasi/Ruang" value={asset.room ? `${asset.room} (Lt. ${asset.floor})` : "-"} />

@@ -16,7 +16,11 @@ from app.api.v1.endpoints.auth import get_current_user
 router = APIRouter()
 
 ALLOW_DUPLICATE_IP_CATEGORIES = [
-    'CCTV', 'Router', 'Switch', 'Access Point', 'FingerPrint'
+    'CCTV', 'CTV',
+    'Router', 'RTR',
+    'Switch', 'SWI',
+    'Access Point', 'ACC',
+    'FingerPrint', 'FIP'
 ]
 
 def get_location_info(db: Session, school_id: int):
@@ -34,15 +38,15 @@ def validate_ip_mac(db: Session, asset_in: AssetCreate | AssetUpdate, current_id
             raise HTTPException(status_code=400, detail=f"MAC Address '{asset_in.mac_address}' sudah digunakan aset lain.")
 
     if asset_in.ip_address:
-        # Cek apakah kategori masuk whitelist duplikat
-        if asset_in.category not in ALLOW_DUPLICATE_IP_CATEGORIES:
+        category_check = getattr(asset_in, 'category_code', '') 
+        if category_check not in ALLOW_DUPLICATE_IP_CATEGORIES:
             query = db.query(Asset).filter(Asset.ip_address == asset_in.ip_address)
             if current_id:
                 query = query.filter(Asset.id != current_id)
             if query.first():
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"IP Address '{asset_in.ip_address}' sudah ada. IP harus unik untuk kategori {asset_in.category}."
+                    detail=f"IP Address '{asset_in.ip_address}' sudah ada. IP harus unik untuk kategori {category_check}."
                 )
 
 @router.get("/", response_model=AssetPaginatedResponse)
@@ -244,9 +248,9 @@ async def import_assets(
         contents = await file.read()
         df = pd.read_excel(io.BytesIO(contents))
         df = df.where(pd.notnull(df), None)
-        
         success_count = 0
         errors = []
+        actor_name = current_user.full_name if current_user.full_name else current_user.email
 
         for index, row in df.iterrows():
             try:
@@ -279,8 +283,21 @@ async def import_assets(
                 )
                 
                 validate_ip_mac(db, asset_data)
+                
                 new_asset = Asset(**asset_data.dict())
                 db.add(new_asset)
+                db.flush()
+                school_name, area_name = get_location_info(db, new_asset.school_id)
+                log = UpdateLog(
+                    asset_barcode=new_asset.barcode,
+                    asset_name=f"{new_asset.brand or ''} - {new_asset.model_series or ''}",
+                    action="IMPORT",
+                    details="Bulk Import via Excel",
+                    actor=actor_name,
+                    school_name=school_name,
+                    area_name=area_name
+                )
+                db.add(log)
                 db.commit()
                 success_count += 1
                 

@@ -151,7 +151,7 @@ const Dashboard = () => {
                         <p className="text-sm font-medium text-gray-800">Input Aset Baru</p>
                         
                         <p className="text-xs text-gray-600 font-bold mt-0.5">
-                            {asset.brand} - {asset.model_series || asset.barcode}
+                            {asset.brand ? `${asset.brand} - ${asset.model_series || asset.barcode}`: (asset.model_series || asset.barcode)}
                         </p>
                         <p className="text-[11px] text-penabur-blue mt-0.5 truncate font-medium">
                             {asset.school?.area?.name ? `Area ${asset.school.area.name}` : 'Area -'} 

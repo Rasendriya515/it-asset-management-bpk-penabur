@@ -143,21 +143,33 @@ const SchoolDetail = () => {
 
   const handleImportProcess = async () => {
     if(!fileImport) return alert("Pilih file dulu!");
+    
     const formData = new FormData();
     formData.append("file", fileImport);
+    
     try {
-        await api.post("/assets/import", formData, {
+        const response = await api.post("/assets/import", formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
-        alert("Import Berhasil!");
+        const { success_count, errors } = response.data;
+        if (success_count > 0 && errors.length === 0) {
+            alert(`SUKSES! ${success_count} data berhasil diimport.`);
+        } else if (success_count > 0 && errors.length > 0) {
+            alert(`PARTIAL SUCCESS!\n✅ Berhasil: ${success_count}\n❌ Gagal: ${errors.length}\n\nCek console untuk detail error.`);
+            console.error("Import Errors:", errors);
+        } else {
+            alert(`GAGAL IMPORT!\nSemua data (${errors.length} baris) gagal dimasukkan.\n\nContoh Error:\n${errors[0]}`);
+            console.error("All Import Errors:", errors);
+        }
         setShowImportModal(false);
         setFileImport(null);
         fetchAssetData();
+        
     } catch (err) {
         console.error(err);
-        alert("Gagal Import: " + (err.response?.data?.detail || "Terjadi kesalahan"));
+        alert("Server Error: " + (err.response?.data?.detail || "Terjadi kesalahan sistem"));
     }
-  };
+};
 
   const handleExport = () => {
     const dataToExport = assets.map((asset, index) => {
