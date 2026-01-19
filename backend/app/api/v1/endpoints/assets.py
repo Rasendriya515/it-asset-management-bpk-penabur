@@ -137,7 +137,9 @@ def create_asset(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Hanya Admin yang bisa membuat aset baru")
+
     existing_asset = db.query(Asset).filter(Asset.barcode == asset_in.barcode).first()
     if existing_asset:
         raise HTTPException(status_code=400, detail=f"Barcode {asset_in.barcode} sudah terdaftar!")
@@ -176,6 +178,9 @@ def update_asset(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Hanya Admin yang bisa mengedit aset")
+
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
     if not asset:
         raise HTTPException(status_code=404, detail="Aset tidak ditemukan")
@@ -215,6 +220,9 @@ def delete_asset(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Hanya Admin yang bisa menghapus aset")
+
     asset = db.query(Asset).options(joinedload(Asset.school)).filter(Asset.id == asset_id).first()
     
     if not asset:
@@ -250,9 +258,14 @@ async def import_assets(
 
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="File harus berformat Excel (.xlsx/.xls)")
+    
+    contents = await file.read ()
+    MAX_FILE_SIZE = 5 * 1024 * 1024
+
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="Ukuran file terlalu besar (Maksimal 5MB)")
 
     try:
-        contents = await file.read()
         df = pd.read_excel(io.BytesIO(contents))
         df = df.where(pd.notnull(df), None)
         success_count = 0
