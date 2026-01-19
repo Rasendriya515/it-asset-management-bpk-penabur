@@ -1,4 +1,4 @@
-# 🏫 IT Asset Management - BPK PENABUR
+# IT Asset Management - BPK PENABUR
 
 ![React](https://img.shields.io/badge/Frontend-React.js-blue?style=for-the-badge&logo=react)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)
@@ -11,7 +11,7 @@ Sistem Informasi Manajemen Aset IT berbasis web yang dirancang untuk memodernisa
 
 ---
 
-## 📸 Tampilan Aplikasi
+## Tampilan Aplikasi
 
 |               **Dashboard Admin**                |             **Halaman Login**             |
 | :----------------------------------------------: | :---------------------------------------: |
@@ -20,17 +20,17 @@ Sistem Informasi Manajemen Aset IT berbasis web yang dirancang untuk memodernisa
 
 ---
 
-## 🔥 Fitur Utama
+## Fitur Utama
 
-- **🔐 Multi-Role Authentication:** Hak akses terpisah untuk Admin, Operator, dan User (IT Support).
-- **📊 Real-time Dashboard:** Visualisasi data total aset dan grafik pengadaan.
-- **📱 QR Code Integration:** Generator & Scanner QR Code untuk identifikasi aset instan.
-- **🛠 Service History:** Pencatatan riwayat perbaikan dan pemeliharaan aset.
-- **🔄 Asset Transfer:** Fitur mutasi aset antar sekolah/ruangan dengan Log Audit otomatis.
+- **Multi-Role Authentication:** Hak akses terpisah untuk Admin, Operator, dan User (IT Support).
+- **Real-time Dashboard:** Visualisasi data total aset dan grafik pengadaan.
+- **QR Code Integration:** Generator & Scanner QR Code untuk identifikasi aset instan.
+- **Service History:** Pencatatan riwayat perbaikan dan pemeliharaan aset.
+- **Asset Transfer:** Fitur mutasi aset antar sekolah/ruangan dengan Log Audit otomatis.
 
 ---
 
-## 🛠️ Teknologi (Tech Stack)
+## Teknologi (Tech Stack)
 
 - **Frontend:** React.js (Vite), Tailwind CSS, Axios.
 - **Backend:** Python FastAPI, SQLAlchemy, Pydantic.
@@ -39,7 +39,7 @@ Sistem Informasi Manajemen Aset IT berbasis web yang dirancang untuk memodernisa
 
 ---
 
-## 🚀 Cara Menjalankan Project (Panduan Instalasi)
+## Cara Menjalankan Project (Panduan Instalasi)
 
 Panduan ini untuk pengguna yang ingin mencoba menjalankan project ini di komputer lokal (Localhost).
 
@@ -78,7 +78,7 @@ Akses aplikasi di browser: http://localhost:5173
 
 ---
 
-## 📂 Struktur Database (ERD)
+## Struktur Database (ERD)
 
 Sistem ini menggunakan 7 tabel utama yang saling berelasi untuk menyimpan data operasional:
 
@@ -90,7 +90,7 @@ Sistem ini menggunakan 7 tabel utama yang saling berelasi untuk menyimpan data o
 
 ---
 
-### 👤 Author
+### Author
 
 **Rafi Rasendriya**
 
